@@ -1,0 +1,67 @@
+# -------------------------------------------------------
+# KUBERNETES DEPLOYMENTS - KYU USE KAREIN? ( NOTES)
+# -------------------------------------------------------
+#
+# 1. Multiple Copies (Instances):
+#    - Production me ek server se kaam nahi chalta, bohot saare copies chahiye.
+#    - Deployment ye kaam automatically sambhal leta hai.
+#
+# 2. Rolling Updates (Dheere-Dheere Update):
+#    - Saare servers ko ek saath update mat karo (warna site down ho jayegi).
+#    - Deployment ek-ek karke update karta hai taaki user ko pata bhi na chale.
+#
+# 3. Rollback (Galti Sudharna):
+#    - Agar naye update me bug aa gaya, to turant purane version pe wapas ja sakte ho.
+#    - Ye "Undo" button jaisa kaam karta hai.
+#
+# 4. Pause and Resume (Ek Saath Changes):
+#    - Agar bohot saare changes karne hain (RAM, CPU, Version change),
+#    - To pehle Deployment ko "Pause" karo, saare changes karo, fir "Resume" karo.
+#    - Sab changes ek saath apply honge, alag-alag nahi.
+#
+# -------------------------------------------------------
+
+apiVersion: apps/v1  #--> apiVersion for deployment is apps/v1
+kind: Deployment #--> kind is Deployment
+metadata: #--> metadata is used to define the name and labels for the deployment
+  creationTimestamp: null # null value for creationTimestamp, it will be automatically filled by Kubernetes when the deployment is created
+  labels: #--> labels for the deployment, this can be anything but should be same as selector matchLabels
+    app: my-flask-app #--> label for the deployment, this can be anything but should be same as selector matchLabels
+  name: my-flask-app #--> name of the deployment, this can be anything but should be unique in the namespace
+spec: #--> spec is used to define the desired state of the deployment
+  replicas: 3 #--> this is used to define how many pods we want, in this case we want 1 pod
+  selector: #--> this is used to define which pods will be managed by this deployment
+    matchLabels: #--> this is used to define the labels that will be used to select the pods that will be managed by this deployment, this should be same as template metadata labels
+      app: my-flask-app #--> this is used to define the label that will be used to select the pods that will be managed by this deployment, this should be same as template metadata labels
+  strategy: {} #--> strategy is used to define the strategy for rolling updates, in this case we are using the default strategy which is RollingUpdate
+  template: #--> template is used to define the pod template for the deployment
+    metadata:   #--> metadata is used to define the labels for the pod template, this should be same as selector matchLabels
+      creationTimestamp: null 
+      labels:
+        app: my-flask-app #--> label for the pod template, this should be same as selector matchLabels
+    spec:
+      containers:
+      - image: omkar012/my-flask-app:latest
+        name: my-flask-app
+        ports:
+            - containerPort: 5000 #--> this is used to define the port on which the container will listen, in this case we are using port 5000
+        resources: {} #--> resources is used to define the resource requests and limits for the container, in this case we are not defining any resource requests and limits
+status: {}
+
+# -------------------------------------------------------
+# RESOURCE QUOTA 
+# -------------------------------------------------------
+# By default 'resources: {}' hota hai, matlab "Khula Saand" (Unlimited).
+# Production me hamesha Limits lagani chahiye taaki server crash na ho.
+#
+# resources:
+#   requests:  # --> (Minimum Guarantee)
+#     memory: "64Mi"  # Kam se kam itna dedo (64 MB) start hone ke liye.
+#     cpu: "250m"     # 0.25 CPU Core (1000m = 1 Core).
+#
+#   limits:    # --> (Lakshman Rekha)
+#     memory: "128Mi" # Isse zyada mat khana (128 MB), warna Kill kar dunga.
+#     cpu: "500m"     # 0.5 CPU Core se zyada use nahi karne dunga.
+# -------------------------------------------------------
+
+#to run this deployment #--> kubectl apply -f deployment01-03.yaml or kubectl create -f deployment01-03.yaml #to check deployment #--> kubectl get deployments #to check pods created by deployment #--> kubectl get pods -l app=my-flask-app

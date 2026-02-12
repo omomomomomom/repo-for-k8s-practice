@@ -1,0 +1,36 @@
+#1st replcaset
+apiVersion: apps/v1 # --> apiVersion for replicaset is apps/v1 
+kind: ReplicaSet 
+metadata: 
+  name: my-flask-app-rs #--> name of the replicaset
+  labels:
+    app: my-app-rc01 #--> label for the replicaset this can be anything need not be same as pod labels
+    environment: dev
+spec:
+  template: #--> template is used to define the pod template for the replicaset
+    metadata:
+      labels:
+        app:  my-app-rc01 #--> should be same as selector matchLabels
+        environment: dev
+    spec:
+      containers:
+        - name: my-flask-app
+          image: omkar012/my-flask-app:latest
+          ports:
+            - containerPort: 5000 #-> should be same as pod container port
+              #need to see the app on brower
+              
+              name: flask-port
+  replicas: 3 #--> this is used to define how many pods we want
+  selector:   #--> this is used to define which pods will be managed by this replicaset
+    matchLabels:
+      app: my-app-rc01 #--> should be same as template metadata labels
+      environment: dev
+
+      # command to create replicaset
+      #--> kubectl apply -f replicaset01.yaml or kubectl create -f replicaset01.yaml
+      # command to check replicaset
+      #--> kubectl get rs
+      # command to check pods created by replicaset
+      #--> kubectl get pods -l app=my-app-rc01
+
