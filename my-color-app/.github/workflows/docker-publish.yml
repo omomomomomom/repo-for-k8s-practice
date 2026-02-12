@@ -34,6 +34,6 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: ./my-color-app        # <--- CHANGE 1: Folder ka naam batao
-          file: ./my-color-app/Dockerfile # <--- CHANGE 2: File ka pura rasta batao
+          file: ./my-color-app/Dockerfile # <--- CHANGE 2: File ka pura rastas batao
           push: true
           tags: ${{ secrets.DOCKER_USERNAME }}/k8s-sample-app:${{ inputs.version_tag }}
