@@ -13,7 +13,7 @@ COPY app.py .
 
 # 5. Default Environment Variables set karo
 # (Agar humne kuch nahi bataya, to ye use honge)
-ENV APP_COLOR=lightblue
+ENV APP_COLOR=lightred
 ENV APP_VERSION="v1-Base"
 
 # 6. Port expose karo

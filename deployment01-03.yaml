@@ -41,7 +41,7 @@ spec: #--> spec is used to define the desired state of the deployment
         app: my-flask-app #--> label for the pod template, this should be same as selector matchLabels
     spec:
       containers:
-      - image: omkar012/my-flask-app:latest
+      - image: omkar012/k8s-sample-app:latest #--> this is used to define the image for the container, in this case we are using the image that we have pushed to Docker Hub
         name: my-flask-app
         ports:
             - containerPort: 5000 #--> this is used to define the port on which the container will listen, in this case we are using port 5000
