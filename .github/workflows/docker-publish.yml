@@ -30,11 +30,12 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       # 4. Image Build karo aur Push karo
+      # 4. Image Build karo aur Push karo
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
-          context: .
-          file: ./Dockerfile
+          context: ./my-color-app        # <--- CHANGE 1: Folder ka naam batao
+          file: ./my-color-app/Dockerfile # <--- CHANGE 2: File ka pura rasta batao
           push: true
           # Niche format: username/image-name:tag
           tags: ${{ secrets.DOCKER_USERNAME }}/k8s-sample-app:${{ inputs.version_tag }}
