@@ -10,8 +10,8 @@ def hello():
     container_id = socket.gethostname()
 
     # 2. Environment Variable se Color lena
-    # Agar variable nahi mila, to default 'lightblue' use karega.
-    bg_color = os.environ.get("APP_COLOR", "lightblue")
+    # Agar variable nahi mila, to default 'lightred' use karega.
+    bg_color = os.environ.get("APP_COLOR","lightred")
     
     # Version tag (Optional, update dekhne ke liye)
     version_tag = os.environ.get("APP_VERSION", "v1")
