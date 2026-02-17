@@ -64,4 +64,4 @@ status: {}
 #     cpu: "500m"     # 0.5 CPU Core se zyada use nahi karne dunga.
 # -------------------------------------------------------
 
-#to run this deployment #--> kubectl apply -f deployment01-03.yaml or kubectl create -f deployment01-03.yaml #to check deployment #--> kubectl get deployments #to check pods created by deployment #--> kubectl get pods -l app=my-flask-app
+#to run this deployment #-->   or kubectl create -f deployment01-03.yaml #to check deployment #--> kubectl get deployments #to check pods created by deployment #--> kubectl get pods -l app=my-flask-app
