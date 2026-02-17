@@ -1,0 +1,74 @@
+###
+## Kubernetes Services & Networking
+#
+###
+### 1. Why do we need Services?
+#In Kubernetes, Pods are "ephemeral" (temporary). They get created, destroyed, and recreated.
+#* **The Problem:** When a Pod is recreated, it gets a new Internal IP (e.g., `10.244.0.2`).
+#* **The Challenge:**
+#    1.  **External Access:** Pod IPs are internal to the cluster. You cannot access a Pod's IP directly from your laptop or the internet.
+#    2.  **Internal Communication:** If a "Frontend Pod" wants to talk to a "Backend Pod", it cannot rely on the hardcoded IP because that IP will change if the Backend Pod restarts.
+#
+#**The Solution:** A **Service** is a static object that provides a stable IP and DNS name to a group of Pods. It enables loose coupling between microservices.
+#
+#---
+#
+### 2. Types of Kubernetes Services
+#1.  **NodePort:** Exposes the internal Pod to a port on the Node (External Access).
+#2.  **ClusterIP:** Creates a virtual IP inside the cluster for internal communication (e.g., Backend <-> DB). This is the default type.
+#3.  **LoadBalancer:** Provisions a real Load Balancer from the Cloud Provider (AWS, Azure, GCP) to distribute traffic.
+#
+#---
+#
+### 3. Deep Dive: NodePort Service
+#This service opens a specific port on **every Node** in the cluster. Any traffic sent to that port is forwarded to the Service, and then to the Pod.
+#
+#### Understanding the 3 Ports
+##This is the most confusing part for beginners. Here is the breakdown:
+#
+##| Port Name | Location | Description |
+##| :--- | :--- | :--- |
+##| **NodePort** | On the **Worker Node** | The port open to the external world (Laptop/Browser). Range: `30000 - 32767`. |
+##| **Port** | On the **Service** | The virtual port of the Service object itself. |
+##| **TargetPort**| On the **Pod** | The actual port where your application (container) is running. |
+#
+#
+#
+#**Traffic Flow:**
+#`User (Browser)` -> `Node IP : NodePort` -> `Service : Port` -> `Pod : TargetPort`
+#
+#---
+#
+### 4. Service Definition (YAML)
+#Here is how we define a NodePort service.
+#
+#```yaml
+#apiVersion: v1
+#kind: Service  # --> Kind is Service
+#metadata:
+#  name: my-webapp-service
+#spec:
+#  type: NodePort  # --> Crucial: Defines external access
+#  
+#  # 1. CONNECTING TO PODS
+#  selector:
+#    app: my-flask-app  # <--- MAGIC LINK: This must match the Pod's labels!
+#  
+#  # 2. DEFINING PORTS
+#  ports:
+#    - targetPort: 80    # Pod's Port (Where app runs)
+#      port: 80          # Service's internal Port
+#      nodePort: 30008   # External Port (Range: 30000-32767)
+
+ApiVersion: v1
+kind: Service
+metadata:
+  name: my-webapp-service
+spec:
+  type: NodePort
+  selector:
+    app: my-flask-app
+  ports:
+    - targetPort: 5000
+      port: 5000
+      nodePort: 30008
