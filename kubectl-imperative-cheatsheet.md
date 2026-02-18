@@ -149,3 +149,92 @@ If you need to specify a **NodePort**, generate a definition file using the comm
 ```
 
 ```
+
+
+Iska main maksad ye hai: **"Agar internet nahi chal raha, ya browser kholne ka time nahi hai, to Terminal ke andar hi help kaise lein?"**
+
+Kubernetes ke paas apni khud ki **Built-in Dictionary/Documentation** hoti hai. Ye lecture usi ko use karne ke **2 Main Commands** sikha raha hai:
+
+---
+
+### 1. `kubectl api-resources` (Resource Dhundne ke liye) 🕵️‍♂️
+
+**Problem:**
+Kabhi-kabhi hum bhool jate hain ki:
+
+* Resource ka sahi naam kya hai? (`pods` hai ya `pod`?)
+* Uska **Short Name** kya hai? (`po`, `svc`, `deploy`?)
+* Uska **API Version** kya hai? (Deployments ke liye `v1` use karein ya `apps/v1`?)
+* Kya ye resource **Namespaced** hai ya nahi?
+
+**Solution:**
+Bas ye command chalao:
+
+```bash
+kubectl api-resources
+
+```
+
+Ye ek list nikaal ke dega jisme saari details hongi.
+
+* Example: Tumhein dikhega `pods`, uska short name `po`, version `v1`, aur `namespaced=true`.
+
+---
+
+### 2. `kubectl explain` (YAML likhne ke liye) 📝
+
+**Problem:**
+Tumhein pata hai ki `Pod` banana hai, lekin tum bhool gaye ki YAML file mein `spec` ke andar kya aata hai? `containers` likhna hai ya `container`? `image` kahan likhna hai?
+
+**Solution:**
+`kubectl explain` command tumhari help karegi. Iske 3 levels hain:
+
+#### Level 1: Upar-Upar se dekhna (Top Level)
+
+Jab tum ye chalate ho:
+
+```bash
+kubectl explain pods
+
+```
+
+To ye batayega ki Pod ke main parts kya hain: `apiVersion`, `kind`, `metadata`, `spec`, `status`.
+(Jaise kitaab ke chapters ke naam dekhna).
+
+#### Level 2: Detail mein ghusna (Drill Down) ⛏️
+
+Agar tumhein `spec` ke andar kya aata hai wo dekhna hai, to **dot (`.`)** lagao:
+
+```bash
+kubectl explain pods.spec
+
+```
+
+Ab ye `spec` ke andar ki saari cheezein dikhayega (jaise `containers`, `volumes`, `nodeName`).
+
+Aur andar jaana hai?
+
+```bash
+kubectl explain pods.spec.containers
+
+```
+
+#### Level 3: Sab kuch ek sath dekhna (Recursive Mode) 🤯
+
+Agar tumhein ek baar mein **Pura ka Pura Structure** dekhna hai (taaki tum YAML copy kar sako), to `--recursive` flag lagao:
+
+```bash
+kubectl explain pods --recursive
+
+```
+
+Ye puri hierarchy (tree structure) print kar dega. Ye tab kaam aata hai jab tum complex YAML file likh rahe ho aur internet access nahi hai.
+
+---
+
+### Summary in Simple Hindi:
+
+1. **Naam ya Version bhool gaye?** -> `kubectl api-resources` use karo.
+2. **YAML fields bhool gaye?** -> `kubectl explain <resource>` use karo.
+3. **Specific field check karna hai?** -> `kubectl explain pod.spec` (Dot lagao).
+4. **Puri janm-kundali dekhni hai?** -> `kubectl explain pod --recursive` use karo.
