@@ -84,3 +84,39 @@ spec:
 * **The Perfect Answer:** "Yes, absolutely! While DaemonSets run on all nodes by default, we can restrict them using `nodeSelector` or `nodeAffinity` inside the DaemonSet's pod template spec. It will then ensure one pod runs *only* on the nodes that match those labels."
 
 *** Bhai, ye notes tere GitHub ke liye ekdum ready hain. Ek baar padhega to pura concept clear rahega. Next transcript ready rakh, isko foddte hain! 🚀
+
+
+*** extra point to node ***
+
+---
+
+### 🛠️ Creating DaemonSet Imperatively (The Exam/Interview Trick)
+
+**Concept:** Kubernetes CLI (`kubectl`) mein DaemonSet ke liye direct `create` command exist nahi karti. Exam (CKA) ya Interview tasks mein time bachane ke liye hum **Deployment** ki command use karke uska structure (YAML) generate karte hain aur usme minor edits karte hain. Isse scratch se file likhne ka time bachta hai.
+
+**Steps to Create:**
+
+1. **Generate Skeleton (Deployment ka YAML churao):**
+Sabse pehle Deployment ki command use karke YAML file generate karo bina resource create kiye (`--dry-run`):
+```bash
+kubectl create deployment my-ds --image=nginx --dry-run=client -o yaml > ds.yaml
+
+```
+
+
+2. **Edit the File (`vi ds.yaml`):**
+File kholo aur bas ye 3 changes karo:
+* **Change Kind:** `Kind: Deployment` ➝ `Kind: DaemonSet`
+* **Remove Replicas:** `replicas: 1` wali line delete kar do (Kyunki DS har node pe chalta hai, count fix nahi hota).
+* **Remove Strategy:** `strategy: {}` wali line delete kar do.
+
+
+3. **Apply the File:**
+```bash
+kubectl apply -f ds.yaml
+
+```
+
+
+
+---
