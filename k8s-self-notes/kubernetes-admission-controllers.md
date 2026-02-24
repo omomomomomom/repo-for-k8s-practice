@@ -104,3 +104,116 @@ spec:
 * **The Perfect Answer:** "No, they cannot. Even if RBAC allows the action, the default **`NamespaceLifecycle`** admission controller protects the core system namespaces (`default`, `kube-system`, `kube-public`) from being deleted. It will intercept the deletion request and reject it."
 
 ---
+
+# *kubernetes-image-policy-webhook-lab*
+
+---
+
+# 🛡️ ImagePolicyWebhook Execution (The Complete Flow)
+
+### 🧠 1. The Architecture (Kaun Kya Kar Raha Hai?)
+
+Isme 3 main characters hain. Unka flow aise chalta hai:
+
+1. **The User (Tu):** `kubectl run` command chalata hai ek Nginx pod banane ke liye.
+2. **The Kube API Server (The Police):** Request ko pakadta hai. Usne dekha ki `ImagePolicyWebhook` plugin ON hai. To wo pod ko banne se rok deta hai (Hold pe daal deta hai).
+3. **The External Scanner (The Expert):** API server ek JSON request banata hai aur tere diye hue URL (`https://image-checker-webhook.default.svc:1323/image_policy`) par bhejta hai. Ye scanner image ko check karta hai (Vulnerabilities, Tags) aur API server ko wapas reply karta hai: `"Allowed: True"` ya `"Allowed: False"`.
+
+---
+
+### 💻 2. Step-by-Step Execution (The Lab Setup)
+
+Lab mein `/etc/kubernetes/imgvalidation` folder ke andar do (2) files hongi jinhe tujhe fix karna hai, aur fir API server ko restart karna hai.
+
+#### Step 1: Webhook ka "Kubeconfig" banana (The Destination)
+
+API server ko external scanner ka URL aise hi nahi de sakte. Usko ek `kubeconfig` format mein dena padta hai.
+Lab mein ek file hogi (maan le `webhook.yaml` ya `kubeconfig.yaml`). Usko edit kar aur ye URL daal:
+
+**File: `/etc/kubernetes/imgvalidation/webhook.yaml**`
+
+```yaml
+apiVersion: v1
+kind: Config
+clusters:
+- cluster:
+    server: https://image-checker-webhook.default.svc:1323/image_policy  # <--- Asli URL yahan aayega
+    certificate-authority-data: "..." # (Lab mein pehle se hoga)
+  name: image-checker
+users:
+- name: api-server
+  user:
+    client-certificate-data: "..." # (Lab mein pehle se hoga)
+contexts:
+- context:
+    cluster: image-checker
+    user: api-server
+  name: image-checker-context
+current-context: image-checker-context
+
+```
+
+#### Step 2: Admission Configuration banana (The Glue)
+
+Ab API server ko batana padega ki `ImagePolicyWebhook` ka rule kahan likha hai. Iske liye ek master config file banti hai jo Step 1 wali file ko point karti hai.
+
+**File: `/etc/kubernetes/imgvalidation/admission-config.yaml**`
+
+```yaml
+apiVersion: apiserver.config.k8s.io/v1
+kind: AdmissionConfiguration
+plugins:
+- name: ImagePolicyWebhook
+  configuration:
+    imagePolicy:
+      kubeConfigFile: /etc/kubernetes/imgvalidation/webhook.yaml  # <--- Step 1 wali file ka rasta!
+      allowTTL: 50
+      denyTTL: 50
+      retryBackoff: 500
+      defaultAllow: false  # <--- (Strict mode: Agar scanner fail hua, to pod mat banne do)
+
+```
+
+#### Step 3: Kube API Server ko activate karna (The Final Boss)
+
+Ab master node ke `/etc/kubernetes/manifests/kube-apiserver.yaml` mein jake API server ko bolna hai ki in files ko padhe.
+
+File khol `vi /etc/kubernetes/manifests/kube-apiserver.yaml` aur ye 2 flags add kar (command section mein):
+
+```yaml
+spec:
+  containers:
+  - command:
+    - kube-apiserver
+    # 1. Plugin ko ON karo
+    - --enable-admission-plugins=NodeRestriction,ImagePolicyWebhook 
+    # 2. Master Config file ka rasta do
+    - --admission-control-config-file=/etc/kubernetes/imgvalidation/admission-config.yaml
+
+```
+
+*(Jaise hi tu is file ko save karke band karega, Kube API server automatically restart hoga. 1-2 minute wait karna padega).*
+
+---
+
+### 🎯 3. What Happens Next? (The Result)
+
+Ab agar tu ek pod banayega jiski image mein koi vulnerability hai (jo scanner ko pasand nahi), to terminal pe error aayega:
+`Error from server (Forbidden): pods "bad-pod" is forbidden: image policy webhook backend denied one or more images.`
+
+Agar image clean hai, to pod normally `Running` state mein aa jayega.
+
+---
+
+### 🔥 4. DevOps Interview Q&A (The Trap)
+
+**Q1: What is the difference between `ValidatingWebhookConfiguration` and `ImagePolicyWebhook`?**
+
+* **The Perfect Answer:** "Both are used to validate requests via an external webhook, but `ImagePolicyWebhook` is specifically hardcoded and optimized just for container images. It is configured directly on the API server using local files (kubeconfig and admission-config). On the other hand, `ValidatingWebhookConfiguration` is a general-purpose, cluster-wide Kubernetes object (YAML) that can intercept *any* kind of resource (Pods, Deployments, Secrets, etc.) and is much more flexible."
+
+**Q2: In the Admission Configuration, what does `defaultAllow: false` mean?**
+
+* **The Perfect Answer (Trap Alert 🚨):** "This is a fail-open vs. fail-closed security concept. If the external image scanner service crashes or goes offline, the API server won't get a response. If `defaultAllow` is `false` (fail-closed), the API server will reject all new pod creations to be safe. If it is `true` (fail-open), it will allow pods to be created even if the scanner is dead, which is risky for security."
+
+---
+
