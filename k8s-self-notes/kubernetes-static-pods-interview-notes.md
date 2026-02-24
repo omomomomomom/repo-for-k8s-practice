@@ -61,3 +61,50 @@ Is wajah se jab tu `kubectl get pods -n kube-system` karta hai, to tujhe Static 
 
 ---
 
+---
+
+### 🕵️‍♂️ How to Identify a Static Pod vs Regular Pod?
+
+Sirf naam dekh kar (aur thoda deep ja kar) hum aasaani se bata sakte hain ki pod Static hai ya Regular. Iske **3 Tareeke** hote hain:
+
+#### 1. The Name Test (Naam se pehchano) 🏷️
+
+Jab Kubelet ek Static Pod banata hai, to wo automatically us pod ke naam ke aage **Node ka naam (Hostname)** chipka deta hai (append kar deta hai).
+Lekin jab Deployment koi pod banata hai, to wo aage ek **Random Hash (Gibberish)** lagata hai.
+
+* **Static Pod Example:** `kube-apiserver-master-node01`
+*(Format: `[Pod-Name]-[Node-Name]`)*
+* **Regular Pod Example:** `nginx-deployment-5c689d8896-xqz8v`
+*(Format: `[Deployment-Name]-[ReplicaSet-Hash]-[Pod-Hash]`)*
+
+#### 2. The "Controlled By" Test (Asli Maalik kaun hai?) 👑
+
+Naam kabhi-kabhi dhoka de sakte hain, isliye "Pro" DevOps engineers hamesha `describe` command chalate hain.
+Agar tu command chalayega: `kubectl describe pod <pod-name>`
+
+* **Static Pod mein dikhega:**
+`Controlled By:  Node/master-node01` *(Kyunki Kubelet aka Node iska maalik hai)*
+* **Regular Pod mein dikhega:**
+`Controlled By:  ReplicaSet/nginx-deployment-5c689d8896` *(Kyunki API Server ne banaya hai)*
+
+#### 3. The Source Test (Aaya kahan se?) 📂
+
+Ye sabse deep technical proof hai. Agar tu pod ka YAML output nikalega (`kubectl get pod <pod-name> -o yaml`), to uske `annotations` section mein tujhe ek hint milega:
+
+* **Static Pod:** `kubernetes.io/config.source: file`
+*(Iska matlab ye pod hard-disk ki kisi **file** se banaya gaya hai, i.e., manifest folder).*
+* **Regular Pod:** `kubernetes.io/config.source: api`
+*(Iska matlab ye Kube **API Server** ke through banaya gaya hai).*
+
+---
+
+### 🔥 DevOps Interview Q&A (Bonus)
+
+**Interviewer:** "I see 10 pods running in the `kube-system` namespace. Without looking at the master node's filesystem, how can you prove which ones are Static Pods?"
+
+**Your Answer (The Perfect Answer):**
+"Sir, the quickest way is to look at the pod names; Static Pods always have the node's hostname appended to them. But for absolute certainty, I will run `kubectl describe pod`. If the `Controlled By` field says `Node/...`, it's a Static Pod. We can also check the annotations for `kubernetes.io/config.source: file`, which confirms the Kubelet created it directly from a local manifest file."
+
+---
+
+
