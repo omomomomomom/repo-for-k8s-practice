@@ -61,6 +61,3 @@ Is wajah se jab tu `kubectl get pods -n kube-system` karta hai, to tujhe Static 
 
 ---
 
-Bhai, ye Static Pods ka post-mortem complete ho gaya. Ye notes tere GitHub repo ki shaan badha denge!
-
-Bata, kya main agle topic pe badhu ya isme kuch aur detail add karni hai? Would you like me to share a real `kubeadm` static pod YAML example for your notes?
